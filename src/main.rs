@@ -1,28 +1,17 @@
-use clap::{Parser, ValueEnum};
-use inquire::Select;
+use clap::{Parser, Subcommand, ValueEnum};
+use inquire::{MultiSelect, Select};
 
 #[derive(Parser)]
+#[command(version, about, long_about = None)]
+#[command(propagate_version = true)]
 struct Cli {
-    /// Command to run (optional, will prompt if missing)
-    #[arg(value_enum)]
-    command: Option<Command>,
+    #[command(subcommand)]
+    command: Commands,
 }
 
-#[derive(Copy, Clone, Debug, ValueEnum)]
-enum Command {
-    Foo,
-    Bar,
-    Baz,
-}
-
-impl std::fmt::Display for Command {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Command::Foo => f.write_str("Foo"),
-            Command::Bar => f.write_str("Bar"),
-            Command::Baz => f.write_str("Baz"),
-        }
-    }
+#[derive(Subcommand)]
+enum Commands {
+    P,
 }
 
 fn main() {
@@ -39,21 +28,28 @@ fn main() {
         })
         .collect::<Vec<_>>();
 
-    for e in repos {
+    for e in &repos {
         println!("{}", e);
     }
 
-    let args = Cli::parse();
+    let cli = Cli::parse();
 
-    let command = match args.command {
-        Some(cmd) => cmd,
-        None => Select::new(
-            "Choose a command:",
-            vec![Command::Foo, Command::Bar, Command::Baz],
-        )
-        .prompt()
-        .expect("Selection failed"),
-    };
+    let selection = match &cli.command {
+        Commands::P => MultiSelect::new("Choose repos:", repos).prompt(),
+    }
+    .expect("a selction");
 
-    println!("Selected: {:?}", command);
+    for repo in selection {
+        let path = format!("{}/{}", dev_dir, repo);
+        let cmd = format!(
+            "cd {} && git stash --include-untracked && git checkout main && git pull && yarn upgrade eucalyptusvc/protobufs@latest; exec bash",
+            path
+        );
+
+        std::process::Command::new("bash")
+            .arg("-c")
+            .arg(cmd)
+            .spawn()
+            .expect("failed to spawn command");
+    }
 }
