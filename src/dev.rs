@@ -10,8 +10,7 @@ impl std::fmt::Display for Repo {
 }
 
 pub fn read_repos() -> Vec<Repo> {
-    let home = std::env::var("HOME").expect("HOME environment variable not set");
-    let dev_dir = format!("{}/dev/euc", home);
+    let dev_dir = std::env::var("DEV_ENV").expect("DEV_ENV environment variable not set");
 
     std::fs::read_dir(&dev_dir)
         .expect("reading directory")
