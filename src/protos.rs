@@ -17,7 +17,7 @@ pub fn bump_protos() -> Result<(), String> {
     // TODO: make work for golang
     for repo in selection {
         let cmd = format!(
-            "cd {} && git stash --include-untracked && git checkout main && git pull && yarn add eucalyptusvc/protobufs@latest",
+            "cd {} && git stash --include-untracked && git checkout main && git pull && yarn add @eucalyptusvc/protobufs@latest",
             repo.path,
         );
 
