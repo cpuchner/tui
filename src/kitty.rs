@@ -15,41 +15,36 @@ pub fn find_or_start_kitty(socket_path: &str) -> Result<KittyWindowInfo, String>
 
         match data {
             Ok(d) if d.len() == 1 => return Ok(d[0].clone()),
-            // TODO: this is jank as hell. on macos if there are no tabs it doesn't close the window
-            Ok(_) => {
-                launch_tab(&socket_path, "hrllo")?;
-                std::thread::sleep(std::time::Duration::from_millis(5000));
-                return find_or_start_kitty(socket_path);
-            }
+            Ok(_) => launch_tab(&socket_path, "hrllo")?,
             Err(e) => return Err(e.to_string()),
         }
-    }
-
-    if which::which("setsid").is_ok() {
-        std::process::Command::new("setsid")
-            .args(&["kitty", "--listen-on", socket_path])
-            .arg("-o")
-            .arg("allow_remote_control=yes")
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn()
-            .expect("failed to launch kitty");
     } else {
-        std::process::Command::new("open")
-            .args([
-                "-na",
-                "kitty",
-                "--args",
-                "--listen-on",
-                socket_path,
-                "-o",
-                "allow_remote_control=yes",
-            ])
-            .stdin(std::process::Stdio::null())
-            .stdout(std::process::Stdio::null())
-            .stderr(std::process::Stdio::null())
-            .spawn()
-            .expect("failed to launch kitty");
+        if which::which("setsid").is_ok() {
+            std::process::Command::new("setsid")
+                .args(&["kitty", "--listen-on", socket_path])
+                .arg("-o")
+                .arg("allow_remote_control=yes")
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn()
+                .expect("failed to launch kitty");
+        } else {
+            std::process::Command::new("open")
+                .args([
+                    "-na",
+                    "kitty",
+                    "--args",
+                    "--listen-on",
+                    socket_path,
+                    "-o",
+                    "allow_remote_control=yes",
+                ])
+                .stdin(std::process::Stdio::null())
+                .stdout(std::process::Stdio::null())
+                .stderr(std::process::Stdio::null())
+                .spawn()
+                .expect("failed to launch kitty");
+        }
     }
 
     for _ in 0..100 {
