@@ -23,6 +23,7 @@ pub fn bump_protos() -> Result<(), String> {
 
         let tab = &kitty_state.tabs.iter().find(|t| t.title == repo.name);
         if tab.is_none() {
+            // TODO: this doesn't focus the new tab before sending
             super::kitty::launch_tab(&socket_path, &repo.name)?;
         } else {
             super::kitty::focus_tab(&socket_path, &repo.name)?;
