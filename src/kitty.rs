@@ -16,7 +16,10 @@ pub fn find_or_start_kitty(socket_path: &str) -> Result<KittyWindowInfo, String>
         match data {
             Ok(d) if d.len() == 1 => return Ok(d[0].clone()),
             Ok(_) => launch_tab(&socket_path, "hrllo")?,
-            Err(e) => return Err(e.to_string()),
+            Err(e) => {
+                println!("{}", String::from_utf8_lossy(&output.stdout).as_ref());
+                return Err(e.to_string());
+            }
         }
     } else {
         if which::which("setsid").is_ok() {
@@ -60,7 +63,10 @@ pub fn find_or_start_kitty(socket_path: &str) -> Result<KittyWindowInfo, String>
             match data {
                 Ok(d) if d.len() == 1 => return Ok(d[0].clone()),
                 Ok(d) => return Err(format!("unexpected window length: {}", d.len())),
-                Err(e) => return Err(e.to_string()),
+                Err(e) => {
+                    println!("{}", String::from_utf8_lossy(&output.stdout).as_ref());
+                    return Err(e.to_string());
+                }
             }
         }
 
@@ -161,7 +167,7 @@ pub struct KittyInnerWindow {
     pub cmdline: Vec<String>,
     pub columns: u64,
     pub created_at: i64,
-    pub cwd: String,
+    pub cwd: Option<String>,
     // pub env: HashMap<String, String>,
     pub foreground_processes: Vec<KittyProcess>,
     pub id: u64,
@@ -179,6 +185,6 @@ pub struct KittyInnerWindow {
 #[derive(Debug, Deserialize, Clone)]
 pub struct KittyProcess {
     pub cmdline: Vec<String>,
-    pub cwd: String,
+    pub cwd: Option<String>,
     pub pid: i64,
 }
